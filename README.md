@@ -5,13 +5,13 @@ A collection of reusable agent skills for AI coding assistants.
 ## Installation
 
 ```bash
-npx skills add <owner>/avandar-agent-skills
+npx skills add AvandarLabs/avandar-agent-skills
 ```
 
 To install a specific skill:
 
 ```bash
-npx skills add <owner>/avandar-agent-skills --skill supabase-declarative-schema
+npx skills add AvandarLabs/avandar-agent-skills --skill supabase-declarative-schema
 ```
 
 ## Available Skills
