@@ -179,6 +179,8 @@ Check these first because they are the most frequent review findings:
 - Functional style: avoid `for` and `while` loops. Prefer functional and
   declarative collection utilities such as `map`, `filter`, `reduce`, and
   `forEach`.
+  - Exceptions: 1) char-by-char for loops on strings; 2) loops that implement
+    exit-early break logic to improve performance
 - Readonly wrappers: do not use per-property `readonly` keys when the real
   contract is "this input object is readonly". Prefer wrapping the function
   parameter in `Readonly<...>` or `readonly T[]`.
