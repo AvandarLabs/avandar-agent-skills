@@ -3,15 +3,15 @@ name: avandar-code-review
 description: Use when reviewing Avandar code changes, pull requests, or local diffs for repo-specific TypeScript, SQL, naming, documentation, and immutability conventions.
 metadata:
   author: jpsyx
-  version: "1.4.0"
+  version: "1.6.0"
   tags: avandar, code-review, typescript, sql, conventions, style
 ---
 
 # Avandar Code Review
 
 Use this skill when reviewing Avandar code for convention violations. Apply the
-general section to every review, then only apply the TypeScript and SQL
-sections when those languages are present in the diff.
+general section to every review, then only apply the language-specific
+checklists when those languages are present in the diff.
 
 ## Additional Checklist File
 
@@ -69,6 +69,8 @@ Use this when the agent should act as reviewer and fixer.
 Use this when the user wants to review interactively and approve each change
 direction before edits happen.
 
+- Tell the user which review phase you are in before presenting findings from
+  that phase.
 - Review iteratively, one finding at a time.
 - For each finding, explain the issue, recommend a fix, and ask the user
   whether to apply that fix or do something else.
@@ -81,16 +83,24 @@ direction before edits happen.
 
 1. If the mode was not specified, ask the user at the very start whether they
    want report mode, auto mode, or pair review mode.
-2. Start with the common mistakes checklist below.
-3. Apply the general checklist.
-4. Apply the TypeScript checklist when the diff includes TS or TSX.
-5. Apply the SQL checklist when the diff includes SQL.
-6. If `docs/code-reviews/extra-checklist.md` exists, review the diff against
-   those additional mistakes too.
-7. Follow the active review mode for how to handle each finding.
-8. At the end of the review, run only the exact tests that are relevant to the
+2. Review the common mistakes checklist below first.
+3. Review the general checks in this file second.
+4. Review the language-specific checklists next by referencing the supporting
+   files in `skills/avandar-code-review/docs/code-reviews/`:
+   `typescript-checklist.md` for TS or TSX diffs and `sql-checklist.md` for
+   SQL diffs.
+5. If `docs/code-reviews/extra-checklist.md` exists, review the diff against
+   those additional repo-local mistakes after finishing the built-in
+   checklists.
+6. Follow the active review mode for how to handle each finding.
+7. At the end of the review, run only the exact tests that are relevant to the
    code changes.
-9. Report only concrete findings that are visible in the code under review.
+8. Report only concrete findings that are visible in the code under review.
+
+In pair review mode, announce the phase explicitly as you move through the
+review, for example: "Phase: common mistakes", "Phase: general checks",
+"Phase: TypeScript checklist", "Phase: SQL checklist", or
+"Phase: repo-local extra checklist".
 
 ## Testing At The End Of Review
 
@@ -119,6 +129,21 @@ After completing the review, run the narrowest relevant tests you can identify.
   waiting for the full set first.
 - Prefer command shapes like `pnpm test:e2e spec-a.spec.ts` followed by
   `pnpm test:e2e spec-b.spec.ts` rather than batching many E2E specs together.
+
+### Reviewing E2E Test Code
+
+- When reviewing an E2E test itself, make sure the test does not bypass the
+  end-to-end path by calling the database directly for behavior that should be
+  exercised through the real product boundary.
+- Direct database insertions are allowed only for test setup and seed data that
+  must exist before the user flow starts, such as workspaces, users,
+  memberships, and similar prerequisites.
+- Do not use direct database writes for steps that are part of the user flow
+  under test when that flow could fail at the application boundary, including
+  auth, permissions, validation, and other request-handling behavior.
+- Treat direct database writes in the middle of an E2E flow as a review
+  finding, even when the test is not explicitly about permissions, because they
+  can hide incorrect allow or deny behavior that the real flow should surface.
 
 ## Most Common Mistakes
 
@@ -184,72 +209,12 @@ Check these first because they are the most frequent review findings:
 - For UI code: use `clsx` for conditional classes.
 - For UI code: never introduce TailwindCSS.
 
-## TypeScript Checks
+## Language-Specific Checklists
 
-- In Deno-reachable code, imports must include file extensions. This especially
-  applies to `supabase/functions/`, `shared/`, and `packages/shared/`.
-- Use JSDoc for public classes and methods.
-- Prefer functional and declarative programming.
-- Avoid classes and imperative patterns unless a real constraint requires them.
-- Prefer higher-order functions over manual loops.
-- Use named exports instead of default exports.
-- Keep comment and docstring lines at 80 characters or fewer.
-- If a docstring fits on one line within 80 characters, keep it single-line.
-- Never use single-line `if` statements: always keep braces.
-- Prefer string interpolation over string concatenation.
-- Use PascalCase for React components, classes, singleton instances, and module
-  objects.
-- Use camelCase for variables, functions, and methods.
-- Use UPPERCASE for environment variables and hard-coded constants.
-- Event handlers should be named `on...`, not `handle...`.
-- Non-exported top-level helper functions should be prefixed with `_`.
-- React component prop types should always be named `Props`.
-- Preserve `e2e` or `E2E` casing exactly; do not invent mixed variants.
-- Never use `any`.
-- Use `as const` for literals that never change.
-- Prefer `type` over `interface`, except for class-style OOP interfaces.
-- Prefer `undefined` over `null` unless an API or framework requires `null`.
-- Prefer string literal unions over enums.
-- Reuse composite types when they are genuinely shared.
-- Avoid extracting one-off type aliases unless the type is reused. `Props` is
-  the explicit exception.
-- If an object shape has 4 or more properties, extract it to a named type for
-  readability.
-- Add explicit types at module boundaries, top-level declarations, and function
-  parameters. Avoid unnecessary annotations for local variables and inline
-  callbacks.
-- Prefer default parameter values over nullish guard logic.
-- Use RO-RO for multiple parameters and multiple return values.
-- If a function takes only one parameter, do not wrap it in an object.
-- When using an object parameter, prefer the name `options` unless `params` or
-  `config` is more accurate.
-- Keep small object parameter types inline. Only extract them when reused.
-- Top-level functions should use the `function` keyword.
-- Nested functions and object methods should use arrow functions.
-- Type imports and type exports should always use the `type` keyword.
-- If a module grows beyond one file, prefer a directory module layout instead
-  of cramming everything into a single file.
-- Do not add barrel files, except approved `index.ts` files in `packages/`.
-- Do not use namespace exports such as `export * from`.
-- All exported classes, objects, and functions need docstrings.
-- If an exported object defines top-level methods inline, those methods need
-  docstrings too.
-- Follow input contravariance and output covariance: readonly at module
-  boundaries for inputs, mutable outputs for callers.
-- Apply readonly wrappers to function parameters, not to local variables,
-  internal helpers, or return types.
-- Prefer mutable local variables and intermediate values.
-- If a function intentionally mutates its input, the name should make the
-  mutation obvious, and returning `void` is usually the clearest contract.
+Use these supporting files when the corresponding language appears in the diff:
 
-## SQL Checks
-
-- Use `snake_case` consistently.
-- Table names should be plural.
-- SQL function names should be namespace-prefixed.
-- Use `util__*` for shared utility functions.
-- Use `table_name__*` for table-specific functions.
-- Trigger names should follow `tr__table_name__*`.
+- TypeScript or TSX: `skills/avandar-code-review/docs/code-reviews/typescript-checklist.md`
+- SQL: `skills/avandar-code-review/docs/code-reviews/sql-checklist.md`
 
 ## Review Output
 
