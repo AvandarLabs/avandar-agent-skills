@@ -32,6 +32,10 @@ This skill takes priority over the base `supabase` skill for all schema-related 
 
 Documents Avandar's conventions for creating new models with the Ava CLI, including `shared/models`, `src/models`, Supabase-backed CRUD models, Dexie-backed browser models, parsers, schema migrations, and client wiring.
 
+### avandar-code-review
+
+Provides an Avandar-specific code review checklist for general, TypeScript, and SQL conventions, including the most common review mistakes around functional programming, readonly placement, naming, typecheck, and linting.
+
 ## Adding Skills
 
 Each skill lives in its own directory under `skills/` and contains a `SKILL.md` file with frontmatter metadata and agent instructions.

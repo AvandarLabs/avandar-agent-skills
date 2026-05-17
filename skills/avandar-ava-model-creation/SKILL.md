@@ -230,7 +230,7 @@ export const ExampleClient = createUsableServiceClient(
     tableName: "examples",
     dbTablePrimaryKey: "id",
     parsers: ExampleParsers,
-  }),
+  })
 );
 ```
 
