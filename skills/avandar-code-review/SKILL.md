@@ -95,10 +95,14 @@ Goal: interactive review, user approves direction before edits.
     - `Yes` — apply the recommended fix
     - `No` — skip this finding and move on
     - `Let's chat about this` — wait for the user's next message before
-      proceeding
+      proceeding. Omit this option when the host provides an interactive
+      menu tool with a built-in free-text input (for example, Claude Code's
+      `AskUserQuestion`, which already exposes a "Type something" field).
 - Do not edit code for a finding until the user picks `Yes`.
-- If the user picks `Let's chat about this`, stop and wait for input. Do not
-  move on to the next finding until the discussion resolves.
+- If the user types a free-text reply instead of picking an option (either
+  via the host's built-in text input or via `Let's chat about this` when
+  that option is offered), stop and wait for input. Do not move on to the
+  next finding until the discussion resolves.
 - Stay inside the requested review scope.
 - After resolving one finding, continue to the next until the review is done.
 
