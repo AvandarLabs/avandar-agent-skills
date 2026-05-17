@@ -3,7 +3,7 @@ name: avandar-code-review
 description: Use when reviewing Avandar code changes, pull requests, or local diffs for repo-specific TypeScript, SQL, naming, documentation, and immutability conventions.
 metadata:
   author: jpsyx
-  version: "1.6.0"
+  version: "1.7.0"
   tags: avandar, code-review, typescript, sql, conventions, style
 ---
 
@@ -34,55 +34,78 @@ The actual repo-local checklist used during reviews lives at
 - When creating the repo-local file for the first time, use the packaged
   template from this skill as the starting structure.
 
+## Asking The User
+
+When this skill says "prompt with options", use the host agent's interactive
+menu tool if one is available, otherwise fall back to a plain-text question.
+Never error out because a menu tool is missing — just ask in chat.
+
+- Claude Code: call `AskUserQuestion` with the listed options.
+- Codex CLI or any other host without an interactive menu tool: write the
+  options as a numbered list in chat and wait for the user's reply.
+- If you are unsure whether a menu tool exists in the current host, default to
+  the plain-text fallback rather than guessing.
+
 ## Review Modes
 
-Before doing any review work, explicitly ask which review mode the user wants
-to use unless they already specified one in the prompt. Do not default
-silently.
+If the mode is not specified in the prompt, prompt with options before any
+review work:
+
+- Question: "Which review mode?"
+- Header (Claude Code only): "Review mode"
+- Options:
+  - `Report` — write a paste-ready review, no edits
+  - `Auto` — fix violations as you find them
+  - `Pair Review` — discuss each finding before editing
+
+Do not default silently.
 
 ### Report Mode
 
-Use this when the goal is a copy-pasteable review for GitHub, Slack, or another
-discussion surface.
+Goal: a copy-pasteable review for GitHub, Slack, or another discussion surface.
 
 - Do not modify code.
-- Review the diff, collect findings, and report them in a clean written review.
-- Keep the output ready to paste externally: concise, concrete, and organized
-  by severity with file and line references.
+- Collect findings; report them ordered by severity with file and line refs.
+- Keep output concise, concrete, and ready to paste externally.
 
 ### Auto Mode
 
-Use this when the agent should act as reviewer and fixer.
+Goal: agent acts as reviewer and fixer.
 
-- As soon as you find a rule violation, fix it yourself when the correct change
-  is clear and local.
-- Only fix issues inside the requested review scope. Do not do opportunistic
-  cleanup, unrelated refactors, or out-of-scope improvements.
-- Continue reviewing after each fix until you exhaust the checklist.
-- Run the relevant validation for the changes you made, especially typecheck,
-  lint, and targeted tests, and report anything you could not verify.
-- At the end, summarize what you changed and call out any remaining findings
-  that were ambiguous, risky, or outside the requested scope.
+- Fix rule violations as you find them when the change is clear and local.
+- Stay inside the requested review scope. No opportunistic cleanup or
+  unrelated refactors.
+- Continue reviewing after each fix until the checklist is exhausted.
+- Run relevant validation (typecheck, lint, targeted tests). Report anything
+  you could not verify.
+- End with a summary of fixes plus any ambiguous, risky, or out-of-scope
+  findings.
 
 ### Pair Review Mode
 
-Use this when the user wants to review interactively and approve each change
-direction before edits happen.
+Goal: interactive review, user approves direction before edits.
 
-- Tell the user which review phase you are in before presenting findings from
-  that phase.
+- Announce the current review phase before presenting its findings.
 - Review iteratively, one finding at a time.
-- For each finding, explain the issue, recommend a fix, and ask the user
-  whether to apply that fix or do something else.
-- Do not edit code for a finding until the user approves the direction.
-- Keep the discussion inside the requested review scope rather than expanding
-  into unrelated cleanup.
+- For each finding: explain the issue, recommend a fix, then prompt with
+  options (see "Asking The User"):
+  - Question: "Apply the recommended fix?"
+  - Header (Claude Code only): "Apply fix?"
+  - Options:
+    - `Yes` — apply the recommended fix
+    - `No` — skip this finding and move on
+    - `Let's chat about this` — wait for the user's next message before
+      proceeding
+- Do not edit code for a finding until the user picks `Yes`.
+- If the user picks `Let's chat about this`, stop and wait for input. Do not
+  move on to the next finding until the discussion resolves.
+- Stay inside the requested review scope.
 - After resolving one finding, continue to the next until the review is done.
 
 ## Review Order
 
-1. If the mode was not specified, ask the user at the very start whether they
-   want report mode, auto mode, or pair review mode.
+1. If the mode was not specified, prompt for it at the very start (see
+   "Review Modes" for the interactive menu spec).
 2. Review the common mistakes checklist below first.
 3. Review the general checks in this file second.
 4. Review the language-specific checklists next by referencing the supporting
